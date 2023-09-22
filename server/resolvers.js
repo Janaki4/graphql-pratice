@@ -1,4 +1,5 @@
 import { authors, games, reviews } from "./data.js";
+import {GraphQLError} from 'graphql'
 
 export const resolvers = {
   Query: {
@@ -10,7 +11,11 @@ export const resolvers = {
     },
     reviews: () => reviews,
     author: (_, arg) => {
-      return authors.find((el) => el.id === arg.id);
+      const result = authors.find((el) => el.id === arg.id)
+      if(!result)throw new GraphQLError("no author found" , {
+        extensions:{code:'Not found'}
+      })
+      return result;
     },
     review: (_, arg) => {
       return reviews.find((el) => el.id === arg.id);
@@ -35,4 +40,20 @@ export const resolvers = {
       return reviews.filter((r) => r.authorId === parent.id);
     },
   },
+
+  Mutation:{
+    deleteGame(_,arg){
+      return games.filter(g=>g.id !== arg.id)
+    },
+    addGame(_,arg){
+      const gamePayload = {
+        ...arg.game,
+        id:Math.floor(Math.random()*1000).toString(),
+        // authorId:Math.floor(Math.random()*1000).toString(),
+      }
+      games.push(gamePayload)
+      return gamePayload 
+    }
+  }
+
 };
